@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: db-backup-utility
+
+  main:
+    banner-mode: off
+logging:
+  level:
+    root: INFO

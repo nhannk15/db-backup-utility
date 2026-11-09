@@ -1,0 +1,49 @@
+1. Initialize Project using Start Spring IO.
+    groupId: com.nhannkl
+    artifactId: db-backup-utility
+
+    dependencies: Spring Shell, Lombok, Spring Configuration Processor.
+
+2. Create the folder structure as in the source code.
+3. Build 3 Database Container using Docker Compose
+4. Practice backup and restore using CLI.
+
+4.1. MySQL.
+docker exec -i bk-mysql mysql -uroot -psecret shop -e "
+CREATE TABLE products (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100), price DECIMAL(10,2));
+INSERT INTO products (name, price) VALUES ('Laptop', 999.99), ('Mouse', 19.50), ('Keyboard', 49.00);"
+
+mkdir -p backups
+docker exec bk-mysql mysqldump -uroot -psecret shop | gzip > backups/shop-mysql.sql.gz
+ls -lh backups/
+
+docker exec -i bk-mysql mysql -uroot -psecret -e "CREATE DATABASE shop_restore;"
+gunzip -c backups/shop-mysql.sql.gz | docker exec -i bk-mysql mysql -uroot -psecret shop_restore
+docker exec bk-mysql mysql -uroot -psecret shop_restore -e "SELECT * FROM products;"
+
+4.2. PostgreSQL.
+docker exec -i bk-postgres psql -U postgres -d shop -c "
+CREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT, price NUMERIC(10,2));
+INSERT INTO products (name, price) VALUES ('Laptop', 999.99), ('Mouse', 19.50);"
+
+docker exec bk-postgres pg_dump -U postgres shop | gzip > backups/shop-pg.sql.gz
+
+docker exec bk-postgres psql -U postgres -c "CREATE DATABASE shop_restore;"
+gunzip -c backups/shop-pg.sql.gz | docker exec -i bk-postgres psql -U postgres -d shop_restore
+docker exec bk-postgres psql -U postgres -d shop_restore -c "SELECT * FROM products;"
+
+4.3. Mongo.
+docker exec bk-mongo mongosh --quiet --eval '
+db = db.getSiblingDB("shop");
+db.products.insertMany([{name:"Laptop",price:999.99},{name:"Mouse",price:19.5}])'
+
+docker exec bk-mongo mongodump --db shop --archive --gzip > backups/shop-mongo.archive.gz
+
+docker exec -i bk-mongo mongorestore --archive --gzip --nsFrom "shop.*" --nsTo "shop_restore.*" < backups/shop-mongo.archive.gz
+docker exec bk-mongo mongosh --quiet --eval 'db.getSiblingDB("shop_restore").products.find()'
+
+5. Writing models.
+models/BackupType consists of { FULL, INCREMENT, DIFFERENTIAL }
+models/DatabaseType consists of { MYSQL, POSTGRESQL, MONGODB, SQLITE }
+models/ConnectionConfig handles Database Connection.
+
