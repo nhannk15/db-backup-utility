@@ -1,0 +1,13 @@
+Objective: writing CommandRunner class to call mysqldump from Java Application,
+compacting into gzip file when writing, creating a backup file for restoring.
+
+Core definitions:
+- Process: computer's process.
+- ProcessBuilder: initlize a Child Process using Java Application.
+    E.g. new ProcessBuilder("docker", "exec", "bk-mysql", "mysqldump", "-uroot", "shop");
+- stdout
+- stderr
+    CompletableFuture.
+- exit code
+- timeout
+- PATH

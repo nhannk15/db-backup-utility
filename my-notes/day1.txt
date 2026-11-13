@@ -9,7 +9,8 @@
 4. Practice backup and restore using CLI.
 
 4.1. MySQL.
-docker exec -i bk-mysql mysql -uroot -psecret shop -e "
+docker exec -it bk-mysql mysql -uroot -psecret shop -e "
+docker exec -it bk-mysql mysql -uroot -p21012006
 CREATE TABLE products (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100), price DECIMAL(10,2));
 INSERT INTO products (name, price) VALUES ('Laptop', 999.99), ('Mouse', 19.50), ('Keyboard', 49.00);"
 
